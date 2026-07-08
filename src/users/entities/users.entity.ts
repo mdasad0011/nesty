@@ -1,7 +1,16 @@
 import { CustomBaseEntity } from 'src/common/entities/custom-base.entity';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Index } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  Index,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
+import { RoleEntity } from 'src/roles/entities/role.entity';
 
 @Entity({
   name: 'users',
@@ -38,9 +47,23 @@ export class UserEntity extends CustomBaseEntity {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
+
+  @ManyToMany(() => RoleEntity, (role) => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: RoleEntity[];
+
   @BeforeInsert()
   async hashPasswordBeforeInsert() {
     if (this.password) {
+      if (!this.salt) {
+        this.salt = await bcrypt.genSalt();
+      }
       await this.hashPassword();
     }
   }

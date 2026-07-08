@@ -1,28 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { UsersService } from './users.service';
-import { UserEntity } from './entities/users.entity';
-import { RoleEntity } from 'src/roles/entities/role.entity';
+import { RolesService } from './roles.service';
+import { RoleEntity } from './entities/role.entity';
+import { PermissionEntity } from 'src/permissions/entities/permission.entity';
 
-describe('UsersService', () => {
-  let service: UsersService;
+describe('RolesService', () => {
+  let service: RolesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UsersService,
+        RolesService,
         {
-          provide: getRepositoryToken(UserEntity),
+          provide: getRepositoryToken(RoleEntity),
           useValue: {},
         },
         {
-          provide: getRepositoryToken(RoleEntity),
+          provide: getRepositoryToken(PermissionEntity),
           useValue: {},
         },
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
+    service = module.get<RolesService>(RolesService);
   });
 
   it('should be defined', () => {

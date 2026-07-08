@@ -1,42 +1,56 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
+  Ip,
+  Headers,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { SignUpDto } from './dto/signup.dto';
+import { SignInDto } from './dto/signin.dto';
+import { RefreshDto } from './dto/refresh.dto';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post('signup')
+  async signUp(@Body() signUpDto: SignUpDto) {
+    return await this.authService.signUp(signUpDto);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('signin')
+  @HttpCode(HttpStatus.OK)
+  async signIn(
+    @Body() signInDto: SignInDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ) {
+    return await this.authService.signIn(signInDto, ip, userAgent);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Body() refreshDto: RefreshDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ) {
+    return await this.authService.refresh(
+      refreshDto.refreshToken,
+      ip,
+      userAgent,
+    );
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Post('signout')
+  @HttpCode(HttpStatus.OK)
+  async signOut(@Body() refreshDto: RefreshDto) {
+    await this.authService.signOut(refreshDto.refreshToken);
+    return { message: 'Logged out successfully' };
   }
 }

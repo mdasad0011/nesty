@@ -1,19 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateUserDto {
+export class SignUpDto {
   @ApiProperty({
     example: 'user@example.com',
-    description: 'The email of the user',
+    description: 'The email address of the user',
   })
   email: string;
 
   @ApiProperty({
     example: 'password123',
-    description: 'The plain password of the user',
+    description: 'The password of the user',
   })
   password: string;
 
-  @ApiProperty({ example: 'John Doe', description: 'The name of the user' })
+  @ApiProperty({
+    example: 'John Doe',
+    description: 'The full name of the user',
+  })
   name: string;
 
   @ApiProperty({
@@ -31,10 +34,10 @@ export class CreateUserDto {
   username?: string;
 
   @ApiProperty({
-    example: ['uuid-1'],
-    description: 'Role IDs to assign to this user',
+    example: ['admin'],
+    description: 'List of role names to assign (optional)',
     required: false,
     type: [String],
   })
-  roleIds?: string[];
+  roles?: string[];
 }

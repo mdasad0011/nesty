@@ -7,6 +7,13 @@ import { HealthModule } from './health/health.module';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './common/guard/roles.guard';
+import { CaslModule } from './casl/casl.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { WinstonModule } from 'nest-winston';
+import winstonConfig from './config/winston.config';
 
 @Module({
   imports: [
@@ -29,11 +36,21 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
           limit: Number(process.env.THROTTLE_LIMIT) || 10,
         }) as unknown as ThrottlerModuleOptions,
     }),
+    WinstonModule.forRoot(winstonConfig),
     UsersModule,
     AuthModule,
     HealthModule,
+    CaslModule,
+    RolesModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}
