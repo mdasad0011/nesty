@@ -9,7 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guard/roles.guard';
-import { CaslModule } from './casl/casl.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { WinstonModule } from 'nest-winston';
@@ -40,7 +39,6 @@ import winstonConfig from './config/winston.config';
     UsersModule,
     AuthModule,
     HealthModule,
-    CaslModule,
     RolesModule,
     PermissionsModule,
   ],
