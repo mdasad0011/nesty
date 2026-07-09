@@ -79,9 +79,20 @@ export class AuthService {
     ip: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = {
-      sub: user.id,
+      id: user.id,
       email: user.email,
       roles: user.role ? [user.role.name] : [],
+      roleId: user.roleId,
+      permissions: Array.from(
+        new Set([
+          ...(user.role?.permissions
+            ? user.role.permissions.map((p) => `${p.method}:${p.resource}`)
+            : []),
+          ...(user.permissions
+            ? user.permissions.map((p) => `${p.method}:${p.resource}`)
+            : []),
+        ]),
+      ),
     };
 
     const accessTokenExpiration =

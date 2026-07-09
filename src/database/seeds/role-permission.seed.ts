@@ -12,31 +12,71 @@ export default class CreateInitialData implements Seeder {
 
     // 1. Create permissions
     const permissionsData = [
-      { action: 'read', subject: 'users', description: 'Read users list' },
-      { action: 'create', subject: 'users', description: 'Create new user' },
       {
-        action: 'update',
-        subject: 'users',
+        resource: 'users',
+        description: 'Read users list',
+        path: '/users',
+        method: 'get',
+        isDefault: true,
+      },
+      {
+        resource: 'users',
+        description: 'Create new user',
+        path: '/users',
+        method: 'post',
+        isDefault: false,
+      },
+      {
+        resource: 'users',
         description: 'Update existing user',
+        path: '/users/:id',
+        method: 'patch',
+        isDefault: false,
       },
-      { action: 'delete', subject: 'users', description: 'Delete user' },
-      { action: 'read', subject: 'roles', description: 'Read roles list' },
-      { action: 'create', subject: 'roles', description: 'Create new role' },
       {
-        action: 'update',
-        subject: 'roles',
-        description: 'Update existing role',
+        resource: 'users',
+        description: 'Delete user',
+        path: '/users/:id',
+        method: 'delete',
+        isDefault: false,
       },
-      { action: 'delete', subject: 'roles', description: 'Delete role' },
+      {
+        resource: 'roles',
+        description: 'Read roles list',
+        path: '/roles',
+        method: 'get',
+        isDefault: true,
+      },
+      {
+        resource: 'roles',
+        description: 'Create new role',
+        path: '/roles',
+        method: 'post',
+        isDefault: false,
+      },
+      {
+        resource: 'roles',
+        description: 'Update existing role',
+        path: '/roles/:id',
+        method: 'patch',
+        isDefault: false,
+      },
+      {
+        resource: 'roles',
+        description: 'Delete role',
+        path: '/roles/:id',
+        method: 'delete',
+        isDefault: false,
+      },
     ];
 
     const savedPermissions: PermissionEntity[] = [];
     for (const p of permissionsData) {
       let perm = await permissionRepository.findOne({
-        where: { action: p.action, subject: p.subject },
+        where: { description: p.description },
       });
       if (!perm) {
-        perm = permissionRepository.create(p);
+        perm = permissionRepository.create(p as any);
         perm = await permissionRepository.save(perm);
       }
       savedPermissions.push(perm);
@@ -63,7 +103,7 @@ export default class CreateInitialData implements Seeder {
       userRole = roleRepository.create({
         name: Role.User,
         description: 'Regular application user',
-        permissions: savedPermissions.filter((p) => p.action === 'read'),
+        permissions: savedPermissions.filter((p) => p.method === 'get'),
       });
       userRole = await roleRepository.save(userRole);
     }
@@ -81,6 +121,7 @@ export default class CreateInitialData implements Seeder {
         role: adminRole,
         roleId: adminRole.id,
         isActive: true,
+        permissions: savedPermissions,
       });
       await userRepository.save(superadmin);
     } else {
@@ -88,6 +129,7 @@ export default class CreateInitialData implements Seeder {
       superadmin.role = adminRole;
       superadmin.roleId = adminRole.id;
       superadmin.isActive = true;
+      superadmin.permissions = savedPermissions;
       await userRepository.save(superadmin);
     }
   }

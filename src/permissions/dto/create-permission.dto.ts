@@ -1,19 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePermissionDto {
-  @ApiProperty({ example: 'read', description: 'The action of the permission' })
-  action: string;
+  @ApiProperty({
+    example: 'users',
+    description: 'The resource this permission applies to',
+  })
+  resource: string;
 
   @ApiProperty({
-    example: 'Article',
-    description: 'The subject class or entity name',
+    example: 'Read users list',
+    description: 'Unique description of the permission',
   })
-  subject: string;
+  description: string;
 
   @ApiProperty({
-    example: 'Allows reading all articles',
-    description: 'A description of the permission',
-    required: false,
+    example: '/users',
+    description: 'The path for this permission',
   })
-  description?: string;
+  path: string;
+
+  @ApiProperty({ example: 'get', description: 'HTTP method' })
+  method?: string;
+
+  @ApiProperty({
+    example: false,
+    description: 'Whether this permission is a default permission',
+  })
+  isDefault?: boolean;
 }

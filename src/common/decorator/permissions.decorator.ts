@@ -1,3 +1,6 @@
-import { Reflector } from '@nestjs/core';
+import { SetMetadata } from '@nestjs/common';
 
-export const Permissions = Reflector.createDecorator<string[]>();
+// Keep decorator available for future use but export symbol for consistency.
+export const PERMISSIONS_KEY = 'permissions';
+export const Permissions = (permissions: string[] = []) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);

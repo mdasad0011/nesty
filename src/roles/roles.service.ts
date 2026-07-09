@@ -9,6 +9,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleEntity } from './entities/role.entity';
 import { PermissionEntity } from 'src/permissions/entities/permission.entity';
+import { UserEntity } from 'src/users/entities/users.entity';
 
 @Injectable()
 export class RolesService {
@@ -17,6 +18,8 @@ export class RolesService {
     private readonly roleRepository: Repository<RoleEntity>,
     @InjectRepository(PermissionEntity)
     private readonly permissionRepository: Repository<PermissionEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
   ) {}
 
   async create(createRoleDto: CreateRoleDto): Promise<RoleEntity> {
@@ -92,6 +95,15 @@ export class RolesService {
 
   async remove(id: string): Promise<void> {
     const role = await this.findOne(id);
+    const usersWithRole = await this.userRepository.count({
+      where: { roleId: id },
+    });
+    if (usersWithRole > 0) {
+      throw new ConflictException(
+        `Cannot delete role; ${usersWithRole} user(s) are assigned to this role. Reassign or remove those users first.`,
+      );
+    }
+
     await this.roleRepository.remove(role);
   }
 }

@@ -7,10 +7,13 @@ import {
   Index,
   OneToOne,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import { RoleEntity } from 'src/roles/entities/role.entity';
+import { PermissionEntity } from 'src/permissions/entities/permission.entity';
 
 @Entity({
   name: 'users',
@@ -51,8 +54,16 @@ export class UserEntity extends CustomBaseEntity {
   @JoinColumn({ name: 'roleId' })
   role: RoleEntity;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'uuid' })
   roleId: string;
+
+  @ManyToMany(() => PermissionEntity, { cascade: true })
+  @JoinTable({
+    name: 'user_permissions',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
+  })
+  permissions: PermissionEntity[];
 
   @BeforeInsert()
   async hashPasswordBeforeInsert() {

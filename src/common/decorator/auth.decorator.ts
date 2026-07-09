@@ -1,7 +1,6 @@
 import { applyDecorators, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthGuard } from '../guard/auth.guard';
-import { RolesGuard } from '../guard/roles.guard';
 import { PermissionsGuard } from '../guard/permissions.guard';
 import { Roles } from './roles.decorator';
 import { Permissions } from './permissions.decorator';
@@ -19,7 +18,7 @@ export function Auth(
   return applyDecorators(
     Roles(roleArray),
     Permissions(permissionArray),
-    UseGuards(AuthGuard, RolesGuard, PermissionsGuard),
+    UseGuards(AuthGuard, PermissionsGuard),
     ApiBearerAuth(),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
   );

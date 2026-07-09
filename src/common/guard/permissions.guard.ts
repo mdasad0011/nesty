@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Permissions } from '../decorator/permissions.decorator';
 import { UsersService } from 'src/users/users.service';
@@ -15,7 +20,12 @@ export class PermissionsGuard implements CanActivate {
       Permissions,
       context.getHandler(),
     );
-    if (!requiredPermissions || requiredPermissions.length === 0) {
+
+    if (requiredPermissions === undefined) {
+      throw new ForbiddenException('Permissions not defined for this endpoint');
+    }
+
+    if (requiredPermissions.length === 0) {
       return true;
     }
 
@@ -29,15 +39,24 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const user = await this.usersService.findOne(userPayload.sub);
+    const user = await this.usersService.findOne(userPayload.id);
     if (!user) {
       return false;
     }
 
-    const userPermissions = user.role?.permissions
-      ? user.role.permissions.map((p) => `${p.action}:${p.subject}`)
+    const rolePermissions = user.role?.permissions
+      ? user.role.permissions.map((p) => `${p.method}:${p.resource}`)
       : [];
 
-    return requiredPermissions.every((perm) => userPermissions.includes(perm));
+    const directPermissions = user.permissions
+      ? user.permissions.map((p) => `${p.method}:${p.resource}`)
+      : [];
+
+    const userPermissionsSet = new Set<string>([
+      ...rolePermissions,
+      ...directPermissions,
+    ]);
+
+    return requiredPermissions.every((perm) => userPermissionsSet.has(perm));
   }
 }
