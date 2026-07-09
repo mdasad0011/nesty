@@ -150,7 +150,7 @@ export default class CreateInitialData implements Seeder {
           name: 'Super Admin',
           username: 'superadmin',
           email: 'super@example.com',
-          password: 'Super@123',
+          password: 'Mdasad@123',
           role: superuserRole,
           roleId: superuserRole.id,
           isActive: true,
@@ -161,7 +161,7 @@ export default class CreateInitialData implements Seeder {
         superadmin.roleId = superuserRole.id;
         superadmin.isActive = true;
         superadmin.permissions = allPermissions;
-        superadmin.password = 'Admin@123';
+        superadmin.password = 'Mdasad@123';
       }
 
       await userRepository.save(superadmin);

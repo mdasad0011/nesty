@@ -13,6 +13,7 @@ import { UserEntity } from './entities/users.entity';
 import { RoleEntity } from 'src/roles/entities/role.entity';
 import { Role } from 'src/common/enums/role.enum';
 import * as bcrypt from 'bcrypt';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -56,10 +57,27 @@ export class UsersService {
     return { id: savedUser.id, message: 'User created successfully' };
   }
 
-  async findAll(): Promise<UserEntity[]> {
-    return await this.userRepository.find({
+  async findAll(paginationDto: PaginationDto): Promise<any> {
+    const { page = 1, limit = 10 } = paginationDto;
+
+    const skip = (page - 1) * limit;
+    const [users, total] = await this.userRepository.findAndCount({
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
       relations: { role: true },
     });
+
+    return {
+      users,
+      meta: {
+        totalItems: total,
+        itemCount: users.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async findOne(id: string): Promise<UserEntity> {

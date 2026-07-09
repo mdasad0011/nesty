@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -14,8 +15,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { PermissionsGuard } from 'src/common/guard/permissions.guard';
-import { Permissions } from 'src/common/decorator/permissions.decorator';
 import { User } from 'src/common/decorator/user.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -30,15 +31,13 @@ export class UsersController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
-  @Permissions(['get:user'])
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.usersService.findAll(paginationDto);
   }
 
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
-  @Permissions(['get:user'])
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -46,7 +45,6 @@ export class UsersController {
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
-  @Permissions(['patch:user'])
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -58,7 +56,6 @@ export class UsersController {
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
-  @Permissions(['delete:user'])
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }

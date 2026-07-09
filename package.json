@@ -1,10 +1,10 @@
 {
   "name": "nesty",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "this is nesty api boilerplate",
+  "author": "mdasad",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "prepare": "husky install",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
