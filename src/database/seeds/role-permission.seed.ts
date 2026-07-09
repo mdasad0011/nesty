@@ -142,7 +142,7 @@ export default class CreateInitialData implements Seeder {
 
     if (superuserRole) {
       let superadmin = await userRepository.findOne({
-        where: { email: 'superadmin@example.com' },
+        where: { email: 'super@example.com' },
       });
 
       if (!superadmin) {
