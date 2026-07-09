@@ -15,6 +15,9 @@ export class RefreshTokenEntity extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255 })
   userAgent: string;
 
+  @Column({ type: 'text' })
+  token: string;
+
   @Index()
   @Column({
     type: 'varchar',

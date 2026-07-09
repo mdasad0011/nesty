@@ -1,18 +1,20 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomBytes, createHmac } from 'crypto';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { UserEntity } from 'src/users/entities/users.entity';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     @InjectRepository(RefreshTokenEntity)
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
   ) {}
@@ -20,7 +22,7 @@ export class AuthService {
   async login(
     loginDto: LoginDto,
     ip: string,
-  ): Promise<{ accessToken: string; refreshToken: string; user: UserEntity }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -32,10 +34,7 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(user, ip);
-    return {
-      ...tokens,
-      user,
-    };
+    return tokens;
   }
 
   async refresh(
@@ -43,7 +42,7 @@ export class AuthService {
     ip: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const tokenEntity = await this.refreshTokenRepository.findOne({
-      where: { id: refreshToken },
+      where: { token: refreshToken },
     });
 
     if (
@@ -67,7 +66,7 @@ export class AuthService {
 
   async logout(refreshToken: string): Promise<void> {
     const tokenEntity = await this.refreshTokenRepository.findOne({
-      where: { id: refreshToken },
+      where: { token: refreshToken },
     });
     if (tokenEntity) {
       tokenEntity.isRevoked = true;
@@ -85,17 +84,33 @@ export class AuthService {
       roles: user.role ? [user.role.name] : [],
     };
 
+    const accessTokenExpiration =
+      this.configService.get<string>('JWT_EXPIRATION') || '15m';
+
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: (process.env.JWT_EXPIRATION as any) || '15m',
+      expiresIn: accessTokenExpiration as any,
     });
 
-    const refreshTokenId = uuidv4();
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    if (!refreshSecret) {
+      throw new Error(
+        'JWT_REFRESH_SECRET environment variable must be defined',
+      );
+    }
+
+    const refreshTokenExpiration =
+      this.configService.get<string>('JWT_REFRESH_EXPIRATION') || '7d';
+
+    const refreshTokenId = randomBytes(32).toString('hex');
+    const refreshToken = createHmac('sha256', refreshSecret)
+      .update(refreshTokenId)
+      .digest('hex');
+
+    const expires = this.calculateExpiryDate(refreshTokenExpiration);
 
     const refreshTokenEntity = this.refreshTokenRepository.create({
-      id: refreshTokenId,
       userId: user.id,
+      token: refreshToken,
       ip: ip || '127.0.0.1',
       userAgent: 'unknown',
       browser: 'Unknown',
@@ -108,7 +123,37 @@ export class AuthService {
 
     return {
       accessToken,
-      refreshToken: refreshTokenId,
+      refreshToken,
     };
+  }
+
+  private calculateExpiryDate(expiration: string): Date {
+    const date = new Date();
+    const value = Number(expiration.slice(0, -1));
+    const unit = expiration.slice(-1);
+
+    if (Number.isNaN(value)) {
+      date.setDate(date.getDate() + 7);
+      return date;
+    }
+
+    switch (unit) {
+      case 'd':
+        date.setDate(date.getDate() + value);
+        break;
+      case 'h':
+        date.setHours(date.getHours() + value);
+        break;
+      case 'm':
+        date.setMinutes(date.getMinutes() + value);
+        break;
+      case 's':
+        date.setSeconds(date.getSeconds() + value);
+        break;
+      default:
+        date.setDate(date.getDate() + 7);
+    }
+
+    return date;
   }
 }

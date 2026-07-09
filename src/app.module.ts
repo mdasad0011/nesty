@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -16,6 +17,12 @@ import winstonConfig from './config/winston.config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env'],
+      ignoreEnvFile: false,
+      expandVariables: true,
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: (): TypeOrmModuleOptions => ({
         type: (process.env.DB_TYPE as any) || 'postgres',

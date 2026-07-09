@@ -3,7 +3,6 @@ import { UserEntity } from '../../users/entities/users.entity';
 import { RoleEntity } from '../../roles/entities/role.entity';
 import { PermissionEntity } from '../../permissions/entities/permission.entity';
 import { Role } from '../../common/enums/role.enum';
-import * as bcrypt from 'bcrypt';
 
 export default class CreateInitialData implements Seeder {
   public async run(factory: Factory, connection: any): Promise<any> {
@@ -74,20 +73,21 @@ export default class CreateInitialData implements Seeder {
       where: { email: 'superadmin@example.com' },
     });
     if (!superadmin) {
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash('Admin@123', salt);
-
       superadmin = userRepository.create({
         name: 'Super Admin',
         username: 'superadmin',
         email: 'superadmin@example.com',
-        password: hashedPassword,
-        roles: [adminRole],
+        password: 'Admin@123',
+        role: adminRole,
         roleId: adminRole.id,
-        salt: salt,
-        isAdmin: true,
         isActive: true,
       });
+      await userRepository.save(superadmin);
+    } else {
+      superadmin.password = 'Admin@123';
+      superadmin.role = adminRole;
+      superadmin.roleId = adminRole.id;
+      superadmin.isActive = true;
       await userRepository.save(superadmin);
     }
   }

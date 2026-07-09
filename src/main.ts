@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -5,8 +6,12 @@ import helmet from 'helmet';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { DataSource } from 'typeorm';
+import CreateInitialData from './database/seeds/role-permission.seed';
 
 declare const module: any;
+
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -46,6 +51,10 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+
+  const dataSource = app.get(DataSource);
+  const seeder = new CreateInitialData();
+  await seeder.run(null as any, dataSource);
 
   await app.listen(process.env.PORT ?? 7777);
   console.log(

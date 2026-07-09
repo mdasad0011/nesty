@@ -56,7 +56,7 @@ export class UserEntity extends CustomBaseEntity {
 
   @BeforeInsert()
   async hashPasswordBeforeInsert() {
-    if (this.password) {
+    if (this.password && !this.isHashedPassword(this.password)) {
       if (!this.salt) {
         this.salt = await bcrypt.genSalt();
       }
@@ -66,17 +66,32 @@ export class UserEntity extends CustomBaseEntity {
 
   @BeforeUpdate()
   async hashPasswordBeforeUpdate() {
-    if (this.password) {
+    if (this.password && !this.isHashedPassword(this.password)) {
       await this.hashPassword();
     }
   }
 
   async validatePassword(password: string): Promise<boolean> {
-    const hash = await bcrypt.hash(password, this.salt);
-    return hash === this.password;
+    if (!this.password || !this.salt) {
+      return false;
+    }
+
+    return bcrypt.compare(password, this.password);
   }
 
   async hashPassword() {
+    if (!this.password || this.isHashedPassword(this.password)) {
+      return;
+    }
+
+    if (!this.salt) {
+      this.salt = await bcrypt.genSalt();
+    }
+
     this.password = await bcrypt.hash(this.password, this.salt);
+  }
+
+  private isHashedPassword(value: string): boolean {
+    return /^\$2[aby]\$/.test(value);
   }
 }
