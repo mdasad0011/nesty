@@ -5,7 +5,6 @@ import {
   IsString,
   IsOptional,
   IsNotEmpty,
-  IsArray,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -63,16 +62,4 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   roleName?: string;
-
-  @ApiProperty({
-    description:
-      'Optional direct permissions to assign to the user (format: method:resource)',
-    required: false,
-    type: [String],
-    example: ['get:users', 'post:users'],
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  permissions?: string[];
 }

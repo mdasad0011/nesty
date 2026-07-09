@@ -29,6 +29,7 @@ async function bootstrap() {
     .addTag('nesty')
     .addBearerAuth()
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory, {
     jsonDocumentUrl: 'api/json',

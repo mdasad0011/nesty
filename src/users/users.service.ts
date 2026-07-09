@@ -44,25 +44,13 @@ export class UsersService {
       );
     }
 
-    const { permissions: permissionStrings, ...rest } = createUserDto as any;
-
-    let permissionsEntities: PermissionEntity[] = [];
-    if (permissionStrings && permissionStrings.length > 0) {
-      const allPermissions = await this.permissionRepository.find();
-      const permSet = new Set(permissionStrings);
-      permissionsEntities = allPermissions.filter((p) =>
-        permSet.has(`${p.method}:${p.resource}`),
-      );
-    }
+    const { ...rest } = createUserDto as any;
 
     const user = this.userRepository.create({
       ...rest,
       role,
-      permissions: permissionsEntities,
-    });
-    const savedUser = (await this.userRepository.save(
-      user as any,
-    )) as unknown as UserEntity;
+    }) as any;
+    const savedUser = await this.userRepository.save(user);
     return { id: savedUser.id, message: 'User created successfully' };
   }
 
