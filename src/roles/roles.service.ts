@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -10,6 +11,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleEntity } from './entities/role.entity';
 import { PermissionEntity } from 'src/permissions/entities/permission.entity';
 import { UserEntity } from 'src/users/entities/users.entity';
+import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class RolesService {
@@ -22,7 +24,10 @@ export class RolesService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto): Promise<RoleEntity> {
+  async create(
+    createRoleDto: CreateRoleDto,
+    currentUser?: any,
+  ): Promise<RoleEntity> {
     const existingRole = await this.roleRepository.findOne({
       where: { name: createRoleDto.name },
     });
@@ -33,6 +38,17 @@ export class RolesService {
     }
 
     const { permissionIds, ...rest } = createRoleDto;
+
+    if (permissionIds && permissionIds.length > 0) {
+      const isAdmin =
+        currentUser?.isAdmin || currentUser?.roles?.includes(Role.Admin);
+      if (!isAdmin) {
+        throw new ForbiddenException(
+          'Only superadmin can assign permissions to roles',
+        );
+      }
+    }
+
     const role = this.roleRepository.create(rest);
 
     if (permissionIds && permissionIds.length > 0) {
@@ -73,9 +89,23 @@ export class RolesService {
     return role;
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto): Promise<RoleEntity> {
+  async update(
+    id: string,
+    updateRoleDto: UpdateRoleDto,
+    currentUser?: any,
+  ): Promise<RoleEntity> {
     const role = await this.findOne(id);
     const { permissionIds, ...rest } = updateRoleDto;
+
+    if (permissionIds) {
+      const isAdmin =
+        currentUser?.isAdmin || currentUser?.roles?.includes(Role.Admin);
+      if (!isAdmin) {
+        throw new ForbiddenException(
+          'Only superadmin can assign permissions to roles',
+        );
+      }
+    }
 
     Object.assign(role, rest);
 

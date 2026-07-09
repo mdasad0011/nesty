@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/users.entity';
 import { RoleEntity } from 'src/roles/entities/role.entity';
+import { Role } from 'src/common/enums/role.enum';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -78,7 +80,11 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    currentUser?: any,
+  ): Promise<UserEntity> {
     const user = await this.findOne(id);
     const {
       roleName,
@@ -86,6 +92,16 @@ export class UsersService {
       permissions: permissionStrings,
       ...rest
     } = updateUserDto as any;
+
+    if (roleName || permissionStrings) {
+      const isAdmin =
+        currentUser?.isAdmin || currentUser?.roles?.includes(Role.Admin);
+      if (!isAdmin) {
+        throw new ForbiddenException(
+          'Only superadmin can assign roles or permissions to users',
+        );
+      }
+    }
 
     Object.assign(user, rest);
 

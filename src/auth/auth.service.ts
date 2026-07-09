@@ -3,11 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { randomBytes, createHmac } from 'crypto';
+import { randomBytes } from 'crypto';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { UserEntity } from 'src/users/entities/users.entity';
+import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -41,6 +42,21 @@ export class AuthService {
     refreshToken: string,
     ip: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    if (!refreshSecret) {
+      throw new Error(
+        'JWT_REFRESH_SECRET environment variable must be defined',
+      );
+    }
+
+    try {
+      await this.jwtService.verifyAsync(refreshToken, {
+        secret: refreshSecret,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
     const tokenEntity = await this.refreshTokenRepository.findOne({
       where: { token: refreshToken },
     });
@@ -83,16 +99,7 @@ export class AuthService {
       email: user.email,
       roles: user.role ? [user.role.name] : [],
       roleId: user.roleId,
-      permissions: Array.from(
-        new Set([
-          ...(user.role?.permissions
-            ? user.role.permissions.map((p) => `${p.method}:${p.resource}`)
-            : []),
-          ...(user.permissions
-            ? user.permissions.map((p) => `${p.method}:${p.resource}`)
-            : []),
-        ]),
-      ),
+      isAdmin: user.role ? user.role.name === Role.Admin : false,
     };
 
     const accessTokenExpiration =
@@ -113,9 +120,15 @@ export class AuthService {
       this.configService.get<string>('JWT_REFRESH_EXPIRATION') || '7d';
 
     const refreshTokenId = randomBytes(32).toString('hex');
-    const refreshToken = createHmac('sha256', refreshSecret)
-      .update(refreshTokenId)
-      .digest('hex');
+    const refreshPayload = {
+      id: user.id,
+      jti: refreshTokenId,
+    };
+
+    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
+      secret: refreshSecret,
+      expiresIn: refreshTokenExpiration as any,
+    });
 
     const expires = this.calculateExpiryDate(refreshTokenExpiration);
 

@@ -14,6 +14,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { PermissionsGuard } from 'src/common/guard/permissions.guard';
+import { Permissions } from 'src/common/decorator/permissions.decorator';
+import { User } from 'src/common/decorator/user.decorator';
 
 @ApiTags('users')
 @Controller('users')
@@ -28,6 +30,7 @@ export class UsersController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
+  @Permissions(['get:user'])
   findAll() {
     return this.usersService.findAll();
   }
@@ -35,6 +38,7 @@ export class UsersController {
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
+  @Permissions(['get:user'])
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -42,13 +46,19 @@ export class UsersController {
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @Permissions(['patch:user'])
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @User() currentUser: any,
+  ) {
+    return this.usersService.update(id, updateUserDto, currentUser);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, PermissionsGuard)
+  @Permissions(['delete:user'])
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }

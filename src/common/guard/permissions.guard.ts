@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Permissions } from '../decorator/permissions.decorator';
 import { UsersService } from 'src/users/users.service';
+import { Role } from '../enums/role.enum';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -16,6 +17,17 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const userPayload = request.user;
+    if (!userPayload) {
+      return false;
+    }
+
+    // SuperAdmin bypasses all permission checks
+    if (userPayload.isAdmin || userPayload.roles?.includes(Role.Admin)) {
+      return true;
+    }
+
     const requiredPermissions = this.reflector.get(
       Permissions,
       context.getHandler(),
@@ -26,16 +38,6 @@ export class PermissionsGuard implements CanActivate {
     }
 
     if (requiredPermissions.length === 0) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const userPayload = request.user;
-    if (!userPayload) {
-      return false;
-    }
-
-    if (userPayload.isAdmin) {
       return true;
     }
 
