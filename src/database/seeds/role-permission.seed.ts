@@ -149,8 +149,8 @@ export default class CreateInitialData implements Seeder {
         superadmin = userRepository.create({
           name: 'Super Admin',
           username: 'superadmin',
-          email: 'superadmin@example.com',
-          password: 'Admin@123',
+          email: 'super@example.com',
+          password: 'Super@123',
           role: superuserRole,
           roleId: superuserRole.id,
           isActive: true,
