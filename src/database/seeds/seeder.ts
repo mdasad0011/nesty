@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../app.module';
+import { AppModule } from '../../app.module';
 import { DataSource } from 'typeorm';
-import CreateInitialData from '../database/seeds/create-initial-data.seed';
+import CreateInitialData from './role-permission.seed';
 
 async function bootstrap() {
   console.log('Bootstrapping NestJS application context for seeding...');

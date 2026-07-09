@@ -47,9 +47,6 @@ export class UserEntity extends CustomBaseEntity {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'boolean', default: false })
-  isAdmin: boolean;
-
   @OneToOne(() => RoleEntity)
   @JoinColumn({ name: 'roleId' })
   role: RoleEntity;

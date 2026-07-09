@@ -82,9 +82,11 @@ export default class CreateInitialData implements Seeder {
         username: 'superadmin',
         email: 'superadmin@example.com',
         password: hashedPassword,
+        roles: [adminRole],
+        roleId: adminRole.id,
         salt: salt,
         isAdmin: true,
-        role: adminRole,
+        isActive: true,
       });
       await userRepository.save(superadmin);
     }
