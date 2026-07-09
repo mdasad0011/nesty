@@ -1,7 +1,6 @@
 import { Column, Entity, ManyToMany, JoinTable } from 'typeorm';
 import { CustomBaseEntity } from 'src/common/entities/custom-base.entity';
 import { PermissionEntity } from 'src/permissions/entities/permission.entity';
-import { UserEntity } from 'src/users/entities/users.entity';
 
 @Entity({ name: 'roles' })
 export class RoleEntity extends CustomBaseEntity {
@@ -20,7 +19,4 @@ export class RoleEntity extends CustomBaseEntity {
     inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   permissions: PermissionEntity[];
-
-  @ManyToMany(() => UserEntity, (user) => user.roles)
-  users: UserEntity[];
 }

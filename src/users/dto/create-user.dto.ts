@@ -31,10 +31,10 @@ export class CreateUserDto {
   username?: string;
 
   @ApiProperty({
-    example: ['uuid-1'],
-    description: 'Role IDs to assign to this user',
+    example: 'uuid-1',
+    description: 'Role ID to assign to this user',
     required: false,
-    type: [String],
+    type: String,
   })
-  roleIds?: string[];
+  roleId?: string;
 }

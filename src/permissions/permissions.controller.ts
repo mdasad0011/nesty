@@ -15,7 +15,6 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { Role } from 'src/common/enums/role.enum';
 
 @ApiTags('permissions')
-@Auth(Role.Admin)
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
@@ -26,16 +25,19 @@ export class PermissionsController {
   }
 
   @Get()
+  @Auth(Role.Admin)
   findAll() {
     return this.permissionsService.findAll();
   }
 
   @Get(':id')
+  @Auth(Role.Admin)
   findOne(@Param('id') id: string) {
     return this.permissionsService.findOne(id);
   }
 
   @Patch(':id')
+  @Auth(Role.Admin)
   update(
     @Param('id') id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
@@ -44,6 +46,7 @@ export class PermissionsController {
   }
 
   @Delete(':id')
+  @Auth(Role.Admin)
   remove(@Param('id') id: string) {
     return this.permissionsService.remove(id);
   }

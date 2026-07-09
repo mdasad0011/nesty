@@ -15,7 +15,6 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { Role } from 'src/common/enums/role.enum';
 
 @ApiTags('roles')
-@Auth(Role.Admin)
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
@@ -26,21 +25,25 @@ export class RolesController {
   }
 
   @Get()
+  @Auth(Role.Admin)
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Get(':id')
+  @Auth(Role.Admin)
   findOne(@Param('id') id: string) {
     return this.rolesService.findOne(id);
   }
 
   @Patch(':id')
+  @Auth(Role.Admin)
   update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
     return this.rolesService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
+  @Auth(Role.Admin)
   remove(@Param('id') id: string) {
     return this.rolesService.remove(id);
   }

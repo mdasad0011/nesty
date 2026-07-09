@@ -5,8 +5,6 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
-import { RoleEntity } from 'src/roles/entities/role.entity';
-
 @Module({
   imports: [
     UsersModule,
@@ -15,7 +13,7 @@ import { RoleEntity } from 'src/roles/entities/role.entity';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '60s' },
     }),
-    TypeOrmModule.forFeature([RefreshTokenEntity, RoleEntity]),
+    TypeOrmModule.forFeature([RefreshTokenEntity]),
   ],
   controllers: [AuthController],
   providers: [AuthService],

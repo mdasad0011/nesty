@@ -5,8 +5,8 @@ import {
   Column,
   Entity,
   Index,
-  ManyToMany,
-  JoinTable,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
@@ -50,13 +50,12 @@ export class UserEntity extends CustomBaseEntity {
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
-  @ManyToMany(() => RoleEntity, (role) => role.users)
-  @JoinTable({
-    name: 'user_roles',
-    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-  })
-  roles: RoleEntity[];
+  @OneToOne(() => RoleEntity)
+  @JoinColumn({ name: 'roleId' })
+  role: RoleEntity;
+
+  @Column({ type: 'uuid', nullable: true })
+  roleId: string;
 
   @BeforeInsert()
   async hashPasswordBeforeInsert() {

@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/users.entity';
@@ -30,17 +30,18 @@ export class UsersService {
       );
     }
 
-    const { roleIds, ...rest } = createUserDto;
+    const { roleId, ...rest } = createUserDto;
     const user = this.userRepository.create(rest);
 
-    if (roleIds && roleIds.length > 0) {
-      const roles = await this.roleRepository.findBy({ id: In(roleIds) });
-      user.roles = roles;
-    } else {
-      const defaultRole = await this.roleRepository.findOne({
-        where: { name: 'user' },
-      });
-      user.roles = defaultRole ? [defaultRole] : [];
+    let role: RoleEntity | null = null;
+    if (roleId) {
+      role = await this.roleRepository.findOne({ where: { id: roleId } });
+    }
+    if (!role) {
+      role = await this.roleRepository.findOne({ where: { name: 'user' } });
+    }
+    if (role) {
+      user.role = role;
     }
 
     return await this.userRepository.save(user);
@@ -48,14 +49,14 @@ export class UsersService {
 
   async findAll(): Promise<UserEntity[]> {
     return await this.userRepository.find({
-      relations: { roles: { permissions: true } },
+      relations: { role: { permissions: true } },
     });
   }
 
   async findOne(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: { roles: { permissions: true } },
+      relations: { role: { permissions: true } },
     });
     if (!user) {
       throw new NotFoundException(`User with ID "${id}" not found`);
@@ -66,13 +67,13 @@ export class UsersService {
   async findByEmail(email: string): Promise<UserEntity | null> {
     return await this.userRepository.findOne({
       where: { email },
-      relations: { roles: { permissions: true } },
+      relations: { role: { permissions: true } },
     });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOne(id);
-    const { roleIds, password, ...rest } = updateUserDto;
+    const { roleId, password, ...rest } = updateUserDto;
 
     Object.assign(user, rest);
 
@@ -81,9 +82,11 @@ export class UsersService {
       user.password = await bcrypt.hash(password, user.salt);
     }
 
-    if (roleIds) {
-      const roles = await this.roleRepository.findBy({ id: In(roleIds) });
-      user.roles = roles;
+    if (roleId) {
+      const role = await this.roleRepository.findOne({ where: { id: roleId } });
+      if (role) {
+        user.role = role;
+      }
     }
 
     return await this.userRepository.save(user);
